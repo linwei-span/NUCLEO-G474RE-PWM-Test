@@ -21,8 +21,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-#define PWM_FREQUENCY   100000
-#define PWM_DUTY_CYCLE  50
+#define PWM_FREQUENCY   200000 //Hz
+#define PWM_DUTY_CYCLE  50     //%
+
+static uint32_t pwmDutyCycle = PWM_DUTY_CYCLE;
+static uint32_t pwmFrequency = PWM_FREQUENCY;
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -141,7 +144,11 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+	  __HAL_TIM_SET_AUTORELOAD(&htim1, 85000000 / pwmFrequency - 1);
+	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 85000000 / pwmFrequency * pwmDutyCycle / 100);
+	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 85000000 / pwmFrequency * pwmDutyCycle / 100);
+	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 85000000 / pwmFrequency * pwmDutyCycle / 100);
+	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 85000000 / pwmFrequency * pwmDutyCycle / 100);
     /* USER CODE BEGIN 3 */
 
   }
@@ -230,7 +237,7 @@ static void MX_TIM1_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 85000000 / PWM_FREQUENCY * PWM_DUTY_CYCLE / 100;
+  sConfigOC.Pulse = 85000000 / PWM_FREQUENCY * pwmDutyCycle / 100;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -240,19 +247,19 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.Pulse = 85000000 / PWM_FREQUENCY * PWM_DUTY_CYCLE / 100;
+  sConfigOC.Pulse = 85000000 / PWM_FREQUENCY * pwmDutyCycle / 100;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
   }
-  sConfigOC.Pulse = 85000000 / PWM_FREQUENCY * PWM_DUTY_CYCLE / 100;
+  sConfigOC.Pulse = 85000000 / PWM_FREQUENCY * pwmDutyCycle / 100;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
   {
     Error_Handler();
   }
-  sConfigOC.Pulse = 85000000 / PWM_FREQUENCY * PWM_DUTY_CYCLE / 100;
+  sConfigOC.Pulse = 85000000 / PWM_FREQUENCY * pwmDutyCycle / 100;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
   {

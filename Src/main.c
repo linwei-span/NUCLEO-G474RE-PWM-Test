@@ -35,8 +35,8 @@
 /* USER CODE BEGIN PD */
 #define DEFAULT_FREQ 200000
 #define DEFAULT_DUTY_CYCLE 50
-#define DEFAULT_DEADTIME 20
-#define DEFAULT_PHASE_SHIFT 90 //degree
+#define DEFAULT_DEADTIME 38
+#define DEFAULT_PHASE_SHIFT 0 //degree
 #define TIMER_CLOCK 170000000
 /* USER CODE END PD */
 
@@ -168,6 +168,7 @@ int main(void)
 	__HAL_TIM_SET_AUTORELOAD(&htim8, TIMER_CLOCK / pwmFreq - 1);
 
 //	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, phaseShift); //if 0, do not trigger?
+//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, __HAL_TIM_GET_COMPARE(&htim1, TIM_CHANNEL_1));
 	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, TIMER_CLOCK / pwmFreq * pwmDutyCycle / 100);
 	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, TIMER_CLOCK / pwmFreq * pwmDutyCycle / 100);
 

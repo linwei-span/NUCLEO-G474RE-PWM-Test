@@ -35,8 +35,9 @@
 /* USER CODE BEGIN PD */
 #define DEFAULT_FREQ 200000
 #define DEFAULT_DUTY_CYCLE 50
-#define DEFAULT_DEADTIME 40
-#define DEFAULT_PHASE_SHIFT 1
+#define DEFAULT_DEADTIME 20
+#define DEFAULT_PHASE_SHIFT 90 //degree
+#define TIMER_CLOCK 170000000
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -163,14 +164,14 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	__HAL_TIM_SET_AUTORELOAD(&htim1, 85000000 / pwmFreq - 1);
-	__HAL_TIM_SET_AUTORELOAD(&htim8, 85000000 / pwmFreq - 1);
+	__HAL_TIM_SET_AUTORELOAD(&htim1, TIMER_CLOCK / pwmFreq - 1);
+	__HAL_TIM_SET_AUTORELOAD(&htim8, TIMER_CLOCK / pwmFreq - 1);
 
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 85000000 / pwmFreq * phaseShift / 180);
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 85000000 / pwmFreq * pwmDutyCycle / 100);
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 85000000 / pwmFreq * pwmDutyCycle / 100);
+//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, phaseShift); //if 0, do not trigger?
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, TIMER_CLOCK / pwmFreq * pwmDutyCycle / 100);
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, TIMER_CLOCK / pwmFreq * pwmDutyCycle / 100);
 
-	__HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, 85000000 / pwmFreq * pwmDutyCycle / 100);
+	__HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, TIMER_CLOCK / pwmFreq * pwmDutyCycle / 100);
   }
   /* USER CODE END 3 */
 }
@@ -263,7 +264,7 @@ static void MX_TIM1_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_ACTIVE;
-  sConfigOC.Pulse = 0;
+  sConfigOC.Pulse = TIMER_CLOCK / pwmFreq * phaseShift / 360;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;

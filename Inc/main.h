@@ -61,9 +61,9 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 
 /* USER CODE BEGIN Private defines */
-/* Compute the prescaler value to have TIM1 counter clock equal to 85000000 Hz */
+/* Compute the prescaler value to have TIM1 counter clock equal to 170000000 Hz */
 
-#define PRESCALER_VALUE     (uint32_t)(((SystemCoreClock) / 85000000) - 1)
+#define PRESCALER_VALUE     (uint32_t)(((SystemCoreClock) / 170000000) - 1)
 
 /* -----------------------------------------------------------------------
 TIM1 Configuration: generate 4 PWM signals with 4 different duty cycles.

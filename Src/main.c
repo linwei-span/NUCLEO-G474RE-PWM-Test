@@ -21,12 +21,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-#define PWM_FREQUENCY   200000 //Hz
-#define PWM_DUTY_CYCLE  50     //%
-
-static uint32_t pwmDutyCycle = PWM_DUTY_CYCLE;
-static uint32_t pwmFrequency = PWM_FREQUENCY;
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -39,7 +33,8 @@ static uint32_t pwmFrequency = PWM_FREQUENCY;
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define DEFAULT_FREQ 200000
+#define DEFAULT_DUTY_CYCLE 50
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -51,7 +46,8 @@ static uint32_t pwmFrequency = PWM_FREQUENCY;
 TIM_HandleTypeDef htim1;
 
 /* USER CODE BEGIN PV */
-
+static uint32_t pwmFreq = DEFAULT_FREQ;
+static uint32_t pwmDutyCycle = DEFAULT_DUTY_CYCLE;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -118,22 +114,20 @@ int main(void)
     /* PWM Generation Error */
     Error_Handler();
   }
+  if (HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1) != HAL_OK)
+  {
+    /* PWM Generation Error */
+    Error_Handler();
+  }
   /* Start channel 2 */
   if (HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2) != HAL_OK)
   {
     /* PWM Generation Error */
     Error_Handler();
   }
-  /* Start channel 3 */
-  if (HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3) != HAL_OK)
+  if (HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2) != HAL_OK)
   {
-    /* PWM generation Error */
-    Error_Handler();
-  }
-  /* Start channel 4 */
-  if (HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4) != HAL_OK)
-  {
-    /* PWM generation Error */
+    /* PWM Generation Error */
     Error_Handler();
   }
 
@@ -144,13 +138,11 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  __HAL_TIM_SET_AUTORELOAD(&htim1, 85000000 / pwmFrequency - 1);
-	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 85000000 / pwmFrequency * pwmDutyCycle / 100);
-	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 85000000 / pwmFrequency * pwmDutyCycle / 100);
-	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 85000000 / pwmFrequency * pwmDutyCycle / 100);
-	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 85000000 / pwmFrequency * pwmDutyCycle / 100);
-    /* USER CODE BEGIN 3 */
 
+    /* USER CODE BEGIN 3 */
+	__HAL_TIM_SET_AUTORELOAD(&htim1, 85000000 / pwmFreq - 1);
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 85000000 / pwmFreq * pwmDutyCycle / 100);
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 85000000 / pwmFreq * pwmDutyCycle / 100);
   }
   /* USER CODE END 3 */
 }
@@ -167,6 +159,7 @@ void SystemClock_Config(void)
   /** Configure the main internal regulator output voltage
   */
   HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1_BOOST);
+
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
@@ -184,6 +177,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -221,7 +215,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = PRESCALER_VALUE;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 85000000 / PWM_FREQUENCY - 1;
+  htim1.Init.Period = 85000000 / pwmFreq - 1;;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -237,7 +231,7 @@ static void MX_TIM1_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 85000000 / PWM_FREQUENCY * pwmDutyCycle / 100;
+  sConfigOC.Pulse = 85000000 / pwmFreq * pwmDutyCycle / 100;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -247,28 +241,15 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.Pulse = 85000000 / PWM_FREQUENCY * pwmDutyCycle / 100;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
+  sConfigOC.Pulse = 85000000 / pwmFreq * pwmDutyCycle / 100;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigOC.Pulse = 85000000 / PWM_FREQUENCY * pwmDutyCycle / 100;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigOC.Pulse = 85000000 / PWM_FREQUENCY * pwmDutyCycle / 100;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
-  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
   {
     Error_Handler();
   }
   sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
   sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
   sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
-  sBreakDeadTimeConfig.DeadTime = 0;
+  sBreakDeadTimeConfig.DeadTime = 40;
   sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
   sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
   sBreakDeadTimeConfig.BreakFilter = 0;
@@ -298,6 +279,8 @@ static void MX_GPIO_Init(void)
 {
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
 }
@@ -342,4 +325,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-

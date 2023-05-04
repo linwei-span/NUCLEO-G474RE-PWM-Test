@@ -108,17 +108,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 /*## Start PWM signals generation #######################################*/
-  /* Start channel 1 */
-  if (HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1) != HAL_OK)
-  {
-    /* PWM Generation Error */
-    Error_Handler();
-  }
-  if (HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1) != HAL_OK)
-  {
-    /* PWM Generation Error */
-    Error_Handler();
-  }
   /* Start channel 2 */
   if (HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2) != HAL_OK)
   {
@@ -126,6 +115,17 @@ int main(void)
     Error_Handler();
   }
   if (HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2) != HAL_OK)
+  {
+    /* PWM Generation Error */
+    Error_Handler();
+  }
+  /* Start channel 4 */
+  if (HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4) != HAL_OK)
+  {
+    /* PWM Generation Error */
+    Error_Handler();
+  }
+  if (HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_4) != HAL_OK)
   {
     /* PWM Generation Error */
     Error_Handler();
@@ -141,9 +141,8 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	__HAL_TIM_SET_AUTORELOAD(&htim1, 85000000 / pwmFreq - 1);
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 85000000 / pwmFreq * pwmDutyCycle / 100);
 	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 85000000 / pwmFreq * pwmDutyCycle / 100);
-  }
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 85000000 / pwmFreq * pwmDutyCycle / 100);  }
   /* USER CODE END 3 */
 }
 
@@ -215,7 +214,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = PRESCALER_VALUE;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 85000000 / pwmFreq - 1;;
+  htim1.Init.Period = 65535;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -231,18 +230,18 @@ static void MX_TIM1_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 85000000 / pwmFreq * pwmDutyCycle / 100;
+  sConfigOC.Pulse = PULSE2_VALUE;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
   sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
   }
-  sConfigOC.Pulse = 85000000 / pwmFreq * pwmDutyCycle / 100;
-  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  sConfigOC.Pulse = 0;
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
   {
     Error_Handler();
   }

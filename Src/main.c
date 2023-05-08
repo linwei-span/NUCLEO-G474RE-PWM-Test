@@ -47,7 +47,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim1;
-TIM_HandleTypeDef htim8;
 
 /* USER CODE BEGIN PV */
 static uint32_t pwmFreq = DEFAULT_FREQ;
@@ -59,7 +58,6 @@ static int32_t phaseShift = DEFAULT_PHASE_SHIFT;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM1_Init(void);
-static void MX_TIM8_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -111,12 +109,11 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_TIM1_Init();
-  MX_TIM8_Init();
   /* USER CODE BEGIN 2 */
 
 /*## Start PWM signals generation #######################################*/
   /* Start channel 1 */
-  if (HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1) != HAL_OK)
+  if (HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1) != HAL_OK)
   {
     /* PWM Generation Error */
     Error_Handler();
@@ -128,6 +125,12 @@ int main(void)
     Error_Handler();
   }
   if (HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2) != HAL_OK)
+  {
+    /* PWM Generation Error */
+    Error_Handler();
+  }
+  /* Start channel 3 */
+  if (HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3) != HAL_OK)
   {
     /* PWM Generation Error */
     Error_Handler();
@@ -144,17 +147,6 @@ int main(void)
     Error_Handler();
   }
 
-  /* Start channel 1 for TIMER8*/
-  if (HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1) != HAL_OK)
-  {
-    /* PWM Generation Error */
-    Error_Handler();
-  }
-  if (HAL_TIMEx_PWMN_Start(&htim8, TIM_CHANNEL_1) != HAL_OK)
-  {
-    /* PWM Generation Error */
-    Error_Handler();
-  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -165,29 +157,46 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	__HAL_TIM_SET_AUTORELOAD(&htim1, TIMER_CLOCK / pwmFreq / 2 - 1);
-	__HAL_TIM_SET_AUTORELOAD(&htim8, TIMER_CLOCK / pwmFreq / 2 - 1);
 
-//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, phaseShift); //if 0, do not trigger?
-//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, __HAL_TIM_GET_COMPARE(&htim1, TIM_CHANNEL_1));
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, TIMER_CLOCK / pwmFreq * pwmDutyCycle / 2 / 100);
-	if (phaseShift > 0 && phaseShift <= 90)
+	if (phaseShift > 0 && phaseShift <= 180)
 	{
-		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, TIMER_CLOCK / pwmFreq * (90 - phaseShift) / 2 / 180);
-		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, TIMER_CLOCK / pwmFreq * (90 + phaseShift) / 2 / 180);
+		if (phaseShift <= 90)
+		{
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, TIMER_CLOCK / pwmFreq * (90 - phaseShift) / 2 / 180);
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, TIMER_CLOCK / pwmFreq * (90 + phaseShift) / 2 / 180);
+		}
+		else
+		{
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, TIMER_CLOCK / pwmFreq / 2);
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0);
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, TIMER_CLOCK / pwmFreq * (180 - phaseShift) / 2 / 180);
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, TIMER_CLOCK / pwmFreq * phaseShift / 2 / 180);
+		}
 	}
-	else if (phaseShift < 0 && phaseShift >= -90)
+	else if (phaseShift < 0 && phaseShift >= -180)
 	{
 		uint32_t temp = 0 - phaseShift;
-		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, TIMER_CLOCK / pwmFreq * (90 + temp) / 2 / 180);
-		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, TIMER_CLOCK / pwmFreq * (90 - temp) / 2 / 180);
+		if (phaseShift >= -90)
+		{
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, TIMER_CLOCK / pwmFreq * (90 + temp) / 2 / 180);
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, TIMER_CLOCK / pwmFreq * (90 - temp) / 2 / 180);
+		}
+		else
+		{
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, TIMER_CLOCK / pwmFreq / 2);
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, TIMER_CLOCK / pwmFreq * temp / 2 / 180);
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, TIMER_CLOCK / pwmFreq * (180 - temp) / 2 / 180);
+		}
 	}
 	else
 	{
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, TIMER_CLOCK / pwmFreq * 50 / 2 / 100);
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, TIMER_CLOCK / pwmFreq * 50 / 2 / 100);
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, TIMER_CLOCK / pwmFreq * 50 / 2 / 100);
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, TIMER_CLOCK / pwmFreq * 50 / 2 / 100);
 	}
 
-	__HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, TIMER_CLOCK / pwmFreq * pwmDutyCycle / 2 / 100);
   }
   /* USER CODE END 3 */
 }
@@ -264,10 +273,6 @@ static void MX_TIM1_Init(void)
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_OC_Init(&htim1) != HAL_OK)
-  {
-    Error_Handler();
-  }
   if (HAL_TIM_PWM_Init(&htim1) != HAL_OK)
   {
     Error_Handler();
@@ -279,28 +284,28 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.OCMode = TIM_OCMODE_ACTIVE;
-  sConfigOC.Pulse = 0;
+  sConfigOC.OCMode = TIM_OCMODE_PWM2;
+  sConfigOC.Pulse = TIMER_CLOCK / pwmFreq * pwmDutyCycle / 2 / 100;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
   sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-  if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigOC.OCMode = TIM_OCMODE_PWM2;
-  sConfigOC.Pulse = TIMER_CLOCK / pwmFreq * pwmDutyCycle / 2 / 100;
-  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
   {
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_ASSYMETRIC_PWM2;
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM2;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
   {
     Error_Handler();
   }
+  sConfigOC.OCMode = TIM_OCMODE_ASSYMETRIC_PWM2;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
   {
     Error_Handler();
@@ -330,89 +335,6 @@ static void MX_TIM1_Init(void)
 }
 
 /**
-  * @brief TIM8 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM8_Init(void)
-{
-
-  /* USER CODE BEGIN TIM8_Init 0 */
-
-  /* USER CODE END TIM8_Init 0 */
-
-  TIM_SlaveConfigTypeDef sSlaveConfig = {0};
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_OC_InitTypeDef sConfigOC = {0};
-  TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
-
-  /* USER CODE BEGIN TIM8_Init 1 */
-
-  /* USER CODE END TIM8_Init 1 */
-  htim8.Instance = TIM8;
-  htim8.Init.Prescaler = PRESCALER_VALUE;
-  htim8.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim8.Init.Period = TIMER_CLOCK / pwmFreq / 2 - 1;
-  htim8.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim8.Init.RepetitionCounter = 0;
-  htim8.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_PWM_Init(&htim8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sSlaveConfig.SlaveMode = TIM_SLAVEMODE_TRIGGER;
-  sSlaveConfig.InputTrigger = TIM_TS_ITR0;
-  if (HAL_TIM_SlaveConfigSynchro(&htim8, &sSlaveConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim8, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = TIMER_CLOCK / pwmFreq * pwmDutyCycle / 2 / 100;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
-  sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-  if (HAL_TIM_PWM_ConfigChannel(&htim8, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
-  sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
-  sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
-  sBreakDeadTimeConfig.DeadTime = DEFAULT_DEADTIME;
-  sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
-  sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
-  sBreakDeadTimeConfig.BreakFilter = 0;
-  sBreakDeadTimeConfig.BreakAFMode = TIM_BREAK_AFMODE_INPUT;
-  sBreakDeadTimeConfig.Break2State = TIM_BREAK2_DISABLE;
-  sBreakDeadTimeConfig.Break2Polarity = TIM_BREAK2POLARITY_HIGH;
-  sBreakDeadTimeConfig.Break2Filter = 0;
-  sBreakDeadTimeConfig.Break2AFMode = TIM_BREAK_AFMODE_INPUT;
-  sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
-  if (HAL_TIMEx_ConfigBreakDeadTime(&htim8, &sBreakDeadTimeConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM8_Init 2 */
-
-  /* USER CODE END TIM8_Init 2 */
-  HAL_TIM_MspPostInit(&htim8);
-
-}
-
-/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -424,8 +346,8 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

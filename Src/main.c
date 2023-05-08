@@ -52,7 +52,7 @@ TIM_HandleTypeDef htim8;
 /* USER CODE BEGIN PV */
 static uint32_t pwmFreq = DEFAULT_FREQ;
 static uint32_t pwmDutyCycle = DEFAULT_DUTY_CYCLE;
-static uint32_t phaseShift = DEFAULT_PHASE_SHIFT;
+static int32_t phaseShift = DEFAULT_PHASE_SHIFT;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -170,8 +170,22 @@ int main(void)
 //	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, phaseShift); //if 0, do not trigger?
 //	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, __HAL_TIM_GET_COMPARE(&htim1, TIM_CHANNEL_1));
 	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, TIMER_CLOCK / pwmFreq * pwmDutyCycle / 2 / 100);
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, TIMER_CLOCK / pwmFreq * pwmDutyCycle / 2 / 100);
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, TIMER_CLOCK / pwmFreq * pwmDutyCycle / 2 / 100);
+	if (phaseShift > 0 && phaseShift <= 90)
+	{
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, TIMER_CLOCK / pwmFreq * (90 - phaseShift) / 2 / 180);
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, TIMER_CLOCK / pwmFreq * (90 + phaseShift) / 2 / 180);
+	}
+	else if (phaseShift < 0 && phaseShift >= -90)
+	{
+		uint32_t temp = 0 - phaseShift;
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, TIMER_CLOCK / pwmFreq * (90 + temp) / 2 / 180);
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, TIMER_CLOCK / pwmFreq * (90 - temp) / 2 / 180);
+	}
+	else
+	{
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, TIMER_CLOCK / pwmFreq * 50 / 2 / 100);
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, TIMER_CLOCK / pwmFreq * 50 / 2 / 100);
+	}
 
 	__HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, TIMER_CLOCK / pwmFreq * pwmDutyCycle / 2 / 100);
   }
@@ -266,7 +280,7 @@ static void MX_TIM1_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_ACTIVE;
-  sConfigOC.Pulse = TIMER_CLOCK / pwmFreq * phaseShift / 360;
+  sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
